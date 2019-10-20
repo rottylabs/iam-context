@@ -1,0 +1,9 @@
+contexts:
+  iam:
+    storage:
+      connections:
+        sqlite:
+          type: db_api
+          driver: sqlite
+          host: :memory:
+      default: sqlite

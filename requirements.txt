@@ -1,0 +1,2 @@
+-e /home/jd/dev/firefly/python/framework
+-e .

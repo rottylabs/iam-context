@@ -14,23 +14,14 @@
 
 from __future__ import annotations
 
-from typing import List
-
 import firefly as ff
 
+from iam import Group
 
-class Role(ff.AggregateRoot):
-    id: str = ff.id_()
-    name: str = ff.required()
 
-    users: List[str] = ff.list_()
+@ff.query_handler('iam.UserGroups')
+class GetGroupsForUser(ff.ApplicationService):
+    _registry: ff.Registry = None
 
-    def assign_role_to_user(self, user_id: str):
-        if user_id not in self.users:
-            self.users.append(user_id)
-        return 'iam.RoleAssigned', {'user_id': user_id, 'role_id': self.id}
-
-    def remove_role_from_user(self, user_id: str):
-        if user_id in self.users:
-            self.users.remove(user_id)
-        return 'iam.RoleRemoved', {'user_id': user_id, 'role_id': self.id}
+    def __call__(self, id_: str, **kwargs):
+        return self._registry(Group).find_all_matching(Group.c.users.contains(id_))

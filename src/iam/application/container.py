@@ -14,23 +14,9 @@
 
 from __future__ import annotations
 
-from typing import List
+import firefly_di as di
+import iam
 
-import firefly as ff
 
-
-class Role(ff.AggregateRoot):
-    id: str = ff.id_()
-    name: str = ff.required()
-
-    users: List[str] = ff.list_()
-
-    def assign_role_to_user(self, user_id: str):
-        if user_id not in self.users:
-            self.users.append(user_id)
-        return 'iam.RoleAssigned', {'user_id': user_id, 'role_id': self.id}
-
-    def remove_role_from_user(self, user_id: str):
-        if user_id in self.users:
-            self.users.remove(user_id)
-        return 'iam.RoleRemoved', {'user_id': user_id, 'role_id': self.id}
+class Container(di.Container):
+    pass

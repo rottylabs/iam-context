@@ -14,18 +14,23 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import List
 
 import firefly as ff
 
-import iam.domain as domain
 
-
-@dataclass
-class Group(ff.Entity):
-    id: str = ff.pk()
+class Group(ff.AggregateRoot):
+    id: str = ff.id_()
     name: str = ff.required()
 
-    users: List[domain.User] = ff.list_()
-    roles: List[domain.Role] = ff.list_()
+    users: List[str] = ff.list_()
+
+    def assign_user_to_group(self, user_id: str):
+        if user_id not in self.users:
+            self.users.append(user_id)
+        return 'iam.GroupAssigned', {'user_id': user_id, 'group_id': self.id}
+
+    def remove_user_from_group(self, user_id: str):
+        if user_id in self.users:
+            self.users.remove(user_id)
+        return 'iam.GroupRemoved', {'user_id': user_id, 'group_id': self.id}

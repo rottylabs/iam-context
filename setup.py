@@ -24,7 +24,7 @@ setuptools.setup(
     author_email="me@jdwilliams.xyz",
     description="Bounded context for users of your application.",
     long_description=long_description,
-    url="https://github.com/firefly19/python-dependency-injection",
+    url="https://github.com/rottylabs/iam-context",
     packages=setuptools.PEP420PackageFinder.find('src'),
     package_dir={'': 'src'},
     classifiers=[

@@ -14,23 +14,26 @@
 
 from __future__ import annotations
 
-from typing import List
-
 import firefly as ff
+import inflection
+
+from iam import User, Role, Group
 
 
-class Role(ff.AggregateRoot):
-    id: str = ff.id_()
-    name: str = ff.required()
+@ff.on(['iam.RoleDeleted', 'iam.GroupDeleted'])
+class RemoveDeletedRoleGroupFromUsers(ff.ApplicationService):
+    _message_factory: ff.MessageFactory = None
+    _registry: ff.Registry = None
 
-    users: List[str] = ff.list_()
+    def __call__(self, name: str, **kwargs):
+        type_ = Group if kwargs['_message'].__class__.__name__ == 'GroupDeleted' else Role
+        if type_ == Group:
+            search_criteria = User.c.groups.contains(name)
+        else:
+            search_criteria = User.c.roles.contains(name)
 
-    def assign_role_to_user(self, user_id: str):
-        if user_id not in self.users:
-            self.users.append(user_id)
-        return 'iam.RoleAssigned', {'user_id': user_id, 'role_id': self.id}
-
-    def remove_role_from_user(self, user_id: str):
-        if user_id in self.users:
-            self.users.remove(user_id)
-        return 'iam.RoleRemoved', {'user_id': user_id, 'role_id': self.id}
+        entity = self._registry(type_).find(name)
+        for user in self.query(self._message_factory.query('iam.Users', search_criteria)):
+            getattr(user, f'remove_{inflection.underscore(type_.__name__)}')(entity)
+            self.invoke(self._message_factory.command('iam.UpdateUser', user.to_dict()))
+        self.dispatch(f'iam.{type_.__name__}RemovedFromUsers', {name: name})

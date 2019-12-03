@@ -5,5 +5,5 @@ contexts:
         sqlite:
           type: db_api
           driver: sqlite
-          host: :memory:
+          host: ":memory:"
       default: sqlite

@@ -16,20 +16,9 @@
 
 import m from "mithril";
 import state from "./state";
-import {bus, startWorker} from "firefly-framework";
+import {bus, startWorker, wait} from "firefly-framework";
 
 startWorker();
-
-function wait(el, cond) {
-    console.log(cond);
-    let waiting = !cond;
-    if (typeof cond === 'function') {
-        waiting = !cond();
-    }
-    return waiting ?
-        m('div', el) :
-        el;
-}
 
 function MyComp() {
     return {
@@ -41,7 +30,7 @@ function MyComp() {
                     { onclick: () => bus.invoke('iam.CreateUser', {given_name: 'Doofus'}) },
                     'Click Me'
                 ),
-                wait(m('ul', state.users().map(u => m('li', u.sub))), state.isNotLoading('users')),
+                wait(m('ul', state.users().map(u => m('li', u.sub))), 'Users'),
             ];
         }
     };

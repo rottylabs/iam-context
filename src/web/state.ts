@@ -14,10 +14,12 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-import { stream, StateManager } from 'firefly-framework';
+import { stream, StateManager } from "firefly-framework";
 
-const state = new StateManager({
+const state = {
     users: stream({query: 'iam.Users', defaultValue: []}),
-});
+};
+
+StateManager.registerState(state);
 
 export default state;

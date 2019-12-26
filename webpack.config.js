@@ -14,16 +14,21 @@
  * <http://www.gnu.org/licenses/>.
  */
 
+
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const DuplicatePackageCheckerPlugin = require("duplicate-package-checker-webpack-plugin");
 const CopyPlugin = require('copy-webpack-plugin');
+const WebpackWatchPlugin = require('webpack-watch-files-plugin').default;
 
 module.exports = {
   entry: {
-    iam: "./src/web/app.ts",
-    serviceWorker: "./node_modules/firefly-framework/src/serviceWorker.ts",
+    iam: [
+        "./src/iam_web/app.py",
+        "./src/iam_web/styles.scss"
+    ]
   },
   output: {
     filename: "[name].js",
@@ -33,9 +38,10 @@ module.exports = {
   },
   devServer: {
     overlay: true,
+    hotOnly: true,
   },
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.py'],
     modules: [
         path.resolve(__dirname, 'node_modules'),
         'node_modules',
@@ -54,11 +60,33 @@ module.exports = {
         }
       },
       {
+        test: /\.py$/,
+        loader: "transcrypt-loader",
+        options: {
+          command: '. venv/bin/activate && python3 -m transcrypt',
+          arguments: [
+              '--nomin',
+              '--map',
+              '--fcall',
+              '--verbose',
+          ]
+        }
+      },
+      {
         test: /\.scss$/,
         use: [
           MiniCssExtractPlugin.loader,
           "css-loader",
-          "postcss-loader",
+          {
+            loader: "postcss-loader",
+            options: {
+              ident: "postcss",
+              plugins: [
+                  require("tailwindcss"),
+                  require("autoprefixer"),
+              ],
+            },
+          },
           "sass-loader",
         ],
       },
@@ -76,8 +104,15 @@ module.exports = {
     }),
     new HtmlWebPackPlugin({
       filename: "index.html",
+      template: path.resolve(__dirname, 'src/iam_web/index.html'),
       excludeChunks: ["serviceWorker"]
     }),
     new DuplicatePackageCheckerPlugin(),
+    new WebpackWatchPlugin({
+      files: [
+        './src/**/*.py'
+      ]
+    }),
+    new webpack.HotModuleReplacementPlugin(),
   ]
 };

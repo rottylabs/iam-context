@@ -19,7 +19,7 @@ from dataclasses import dataclass
 import firefly as ff
 
 
-@dataclass
+@dataclass()
 class Address:
     street_address: str = ff.required()
     locality: str = ff.required()

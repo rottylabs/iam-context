@@ -18,7 +18,7 @@ from datetime import datetime
 
 import firefly as ff
 
-import iam.domain as domain
+import iam
 
 
 class User(ff.AggregateRoot):
@@ -41,7 +41,7 @@ class User(ff.AggregateRoot):
     locale: str = ff.optional()
     phone_number: str = ff.optional()
     phone_number_verified: bool = ff.optional(default=False)
-    address: domain.Address = ff.optional()
+    address: iam.Address = ff.optional()
     updated_at: datetime = ff.now()
 
     # Custom fields

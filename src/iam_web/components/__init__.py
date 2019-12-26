@@ -12,6 +12,3 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 
-from iam.domain.entity.user import User
-from iam.domain.entity.group import Group
-from iam.domain.entity.role import Role

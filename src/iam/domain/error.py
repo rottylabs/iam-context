@@ -14,13 +14,14 @@
 
 from __future__ import annotations
 
-import firefly as ff
+
+class IamError(Exception):
+    pass
 
 
-class Address(ff.ValueObject):
-    street_address: str = ff.required(str)
-    locality: str = ff.required(str)
-    region: str = ff.required(str)
-    postal_code: str = ff.required(str)
-    country: str = ff.required(str)
-    formatted: str = ff.optional(str)
+class AuthenticationFailed(IamError):
+    pass
+
+
+class Unauthorized(IamError):
+    pass

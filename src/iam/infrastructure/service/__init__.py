@@ -24,29 +24,4 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 
-from firefly.ui.web.components.layouts.default import AppContainer
-from firefly.ui.web.js_libs.mithril import m
-from firefly.ui.web.polyfills import *  # __:skip
-
-from iam_web.components.clients_page import ClientsPage
-from iam_web.components.main_menu import MainMenu
-
-m.route.prefix = ''
-
-
-def app(component):
-    return AppContainer(component)
-
-
-m.route(document.body, '/', {
-    '/': app(MainMenu()),
-    '/clients': app(ClientsPage()),
-})
-
-"""
-__pragma__('js', '{}', '''
-if (module.hot) {
-  module.hot.accept();
-}
-''')
-"""
+from iam.infrastructure.service.request_validator import OauthlibRequestValidator

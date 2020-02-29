@@ -24,29 +24,30 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 
-from firefly.ui.web.components.layouts.default import AppContainer
-from firefly.ui.web.js_libs.mithril import m
-from firefly.ui.web.polyfills import *  # __:skip
+from __future__ import annotations
 
-from iam_web.components.clients_page import ClientsPage
-from iam_web.components.main_menu import MainMenu
+from typing import List
 
-m.route.prefix = ''
+import firefly as ff
 
 
-def app(component):
-    return AppContainer(component)
+class Client(ff.AggregateRoot):
+    id: str = ff.id_()
+    grant_type: str = ff.required(str, validators=[ff.IsOneOf(('authorization_code', 'Authorization code'))])
+    response_type: str = ff.required(str, validators=[ff.IsOneOf(('code', 'Authorization code'))])
+    scopes: str = ff.required(str)
+    default_redirect_uri: str = ff.required(str)
+    redirect_uris: List[str] = ff.list_()
+    allowed_response_types: List[str] = ff.list_(validators=[ff.IsOneOf('code', 'token')])
 
+    def validate_redirect_uri(self, redirect_uri: str):
+        return redirect_uri in self.redirect_uris
 
-m.route(document.body, '/', {
-    '/': app(MainMenu()),
-    '/clients': app(ClientsPage()),
-})
+    def validate_response_type(self, response_type: str):
+        return response_type in self.allowed_response_types
 
-"""
-__pragma__('js', '{}', '''
-if (module.hot) {
-  module.hot.accept();
-}
-''')
-"""
+    def validate_scopes(self, scopes: List[str]):
+        for scope in scopes:
+            if scope not in self.scopes:
+                return False
+        return True

@@ -21,7 +21,7 @@ import firefly as ff
 
 class Role(ff.AggregateRoot):
     id: str = ff.id_()
-    name: str = ff.required()
+    name: str = ff.required(str)
 
     users: List[str] = ff.list_()
 

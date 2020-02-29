@@ -12,5 +12,4 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 
-from .get_groups_for_user import GetGroupsForUser
-from .get_roles_for_user import GetRolesForUser
+from .oauth import *

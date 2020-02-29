@@ -12,12 +12,20 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 
+
 from firefly.ui.web.polyfills import *  # __:skip
+from firefly.ui.web.js_libs.mithril import m, Stream
 
 from typing import Any, Callable
 
-from firefly import Query, MessageFactory
-from firefly.ui.web import bus
+from firefly import Query, MessageFactory, Message
+from firefly.ui.web.bus import bus
+
+
+def __pragma__(*args):
+    pass
+
+# __pragma__('js', '{}', "var inflection = require('inflection');")
 
 # __pragma__('opov')
 # __pragma__('kwargs')
@@ -27,47 +35,80 @@ import iam
 mf = MessageFactory()
 
 
-class FireflyStream:
+class QueryStream:
     _bus = bus
 
-    def __init__(self, query: Query = None, default: Any = None, fetch: str = 'lazy'):
+    def __init__(self, query: Query = None, default: Any = None, fetch: str = 'lazy', handlers: dict = None,
+                 refresh_on: list = None):
         self._initialized = False
         self._query = query
-        self._stream = m.stream(default or [])
+        self._stream = Stream(default or [])
         self._stream.map(lambda: m.redraw())
+
+        def _set_stale(val):
+            self._stale = False
+        self._stream.map(_set_stale)
+
         self._aggregate = inflection.singularize(query.__class__.__name__)
+        self._stale = False
+
+        if handlers is not None:
+            for command, handler in handlers.items():
+                def mw(message: Message, next_: Callable):
+                    context, cmd = str(command).split('.')
+                    if message.get_context() == context and message.__class__.__name__ == cmd:
+                        self._stream(handler(message, self._stream()))
+                    return next_(message)
+                self._bus.insert_command_handler(1, mw)
+
+        if refresh_on is not None:
+            for command in refresh_on:
+                def mw(message: Message, next_: Callable):
+                    context, cmd = str(command).split('.')
+                    ret = next_(message)
+                    if message.get_context() == context and message.__class__.__name__ == cmd:
+                        if hasattr(ret, 'then'):
+                            return ret.then(lambda _: self.refresh())
+                    return ret
+                self._bus.insert_command_handler(1, mw)
 
         if fetch == 'eager':
             self._execute_query()
 
     def __call__(self, value: Callable = None):
         if value is None:
+            if not self._initialized:
+                self._execute_query()
             return self._stream()
         return self._stream(value)
 
     def __getattr__(self, item):
-        console.log(item)
         return getattr(self._stream, item)
 
     def matches_aggregate(self, aggregate: str):
         return self._aggregate == aggregate
 
+    def refresh(self):
+        self._execute_query()
+
+    def is_stale(self):
+        return self._stale
+
     def _execute_query(self):
-        self._bus.request(self._query).then(lambda result: self._stream(lambda: result))
+        self._stale = True
+        self._bus.request(self._query).then(self._stream)
         self._initialized = True
 
 
 class State:
     def __init__(self):
-        self.users = FireflyStream(
-            query=mf.query('Users'),
-            default=[
-                iam.User(given_name='Doofus'),
-                iam.User(given_name='Dumbass')
-            ]
+        self.users = QueryStream(
+            query=mf.query('iam.Users'),
+            default=[],
+            handlers={
+                'iam.CreateUser': lambda c, s: s + [iam.User(**c.to_dict())]
+            },
         )
-
-        self.foo = self.users.map(lambda us: filter(lambda u: u.given_name != 'Doofus', us))
 
 
 state = State()

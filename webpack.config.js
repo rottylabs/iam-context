@@ -20,99 +20,139 @@ const webpack = require('webpack');
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const DuplicatePackageCheckerPlugin = require("duplicate-package-checker-webpack-plugin");
-const CopyPlugin = require('copy-webpack-plugin');
 const WebpackWatchPlugin = require('webpack-watch-files-plugin').default;
+const DotEnv = require('dotenv-webpack');
+const pkg = require('./package.json');
 
-module.exports = {
-  entry: {
-    iam: [
-        "./src/iam_web/app.py",
+module.exports = (env) => {
+  return {
+    entry: {
+      iam: [
+        "./__target__/iam_web.app.js",
         "./src/iam_web/styles.scss"
-    ]
-  },
-  output: {
-    filename: "[name].js",
-    library: "[name]",
-    // libraryTarget: "umd",
-    // globalObject: "this",
-  },
-  devServer: {
-    overlay: true,
-    hotOnly: true,
-  },
-  resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx', '.py'],
-    modules: [
+      ],
+      admin: [
+          "./__target__/build.admin.js",
+          "./src/iam_web/styles.scss"
+      ],
+    },
+    output: {
+      filename: "[name].js",
+      library: "[name]",
+      // libraryTarget: "umd",
+      // globalObject: "this",
+    },
+    devServer: {
+      overlay: true,
+      hot: true,
+    },
+    resolve: {
+      extensions: ['.js'],
+      modules: [
         path.resolve(__dirname, 'node_modules'),
         'node_modules',
-    ],
-  },
-  optimization: {
-    minimize: false
-  },
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: "babel-loader"
-        }
-      },
-      {
-        test: /\.py$/,
-        loader: "transcrypt-loader",
-        options: {
-          command: '. venv/bin/activate && python3 -m transcrypt',
-          arguments: [
-              '--nomin',
-              '--map',
-              '--fcall',
-              '--verbose',
-          ]
-        }
-      },
-      {
-        test: /\.scss$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          "css-loader",
-          {
-            loader: "postcss-loader",
-            options: {
-              ident: "postcss",
-              plugins: [
+      ],
+    },
+    optimization: {
+      minimize: false
+    },
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          use: {
+            loader: "babel-loader"
+          }
+        },
+        {
+          test: /\.(svg)$/,
+          use: {
+            loader: "svg-inline-loader",
+          }
+        },
+        // {
+        //   test: /\.py$/,
+        //   loader: "transcrypt-loader",
+        //   options: {
+        //     command: '. venv/bin/activate && python3 -m transcrypt',
+        //     arguments: [
+        //       '--nomin',
+        //       '--map',
+        //       '--fcall',
+        //       '--verbose',
+        //     ]
+        //   }
+        // },
+        {
+          test: /\.(sa|sc|c)ss$/,
+          use: [
+            {
+              loader: MiniCssExtractPlugin.loader,
+              options: {
+                hmr: true,
+                reloadAll: true,
+              }
+            },
+            "css-loader",
+            {
+              loader: "postcss-loader",
+              options: {
+                ident: "postcss",
+                plugins: [
                   require("tailwindcss"),
                   require("autoprefixer"),
-              ],
+                ],
+              },
             },
-          },
-          "sass-loader",
-        ],
-      },
-      {
-        test: /\.tsx?$/,
-        loader: "ts-loader",
-        exclude: /node_modules/,
-      },
-    ]
-  },
-  plugins: [
-    new MiniCssExtractPlugin({
-      filename: "styles.scss",
-      chunkFilename: "styles.css"
-    }),
-    new HtmlWebPackPlugin({
-      filename: "index.html",
-      template: path.resolve(__dirname, 'src/iam_web/index.html'),
-      excludeChunks: ["serviceWorker"]
-    }),
-    new DuplicatePackageCheckerPlugin(),
-    new WebpackWatchPlugin({
-      files: [
-        './src/**/*.py'
+            {
+              loader: "sass-loader",
+              options: {
+                sassOptions: (loaderContext) => {
+                  const output = require('child_process').execSync(
+                      './venv/bin/pip show firefly-framework',
+                  );
+                  const fireflyPath = /Location:\s([^\n]+)/.exec(output)[1];
+
+                  return {
+                    includePaths: [fireflyPath],
+                  };
+                },
+              },
+            },
+          ],
+        },
       ]
-    }),
-    new webpack.HotModuleReplacementPlugin(),
-  ]
+    },
+    plugins: [
+      new DotEnv({
+        path: `./.env.${env}`,
+        expand: true,
+      }),
+      new MiniCssExtractPlugin({
+        filename: "[name].css",
+        chunkFilename: "[name].css"
+      }),
+      new HtmlWebPackPlugin({
+        filename: "index.html",
+        template: path.resolve(__dirname, 'src/iam_web/index.html'),
+        excludeChunks: ["serviceWorker", "admin"],
+      }),
+      new HtmlWebPackPlugin({
+        filename: "admin/index.html",
+        template: path.resolve(__dirname, 'src/iam_web/index.html'),
+        excludeChunks: ["serviceWorker", "iam"],
+      }),
+      new DuplicatePackageCheckerPlugin(),
+      new WebpackWatchPlugin({
+        files: [
+          './__target__/*.js'
+        ]
+      }),
+      new webpack.HotModuleReplacementPlugin(),
+      new webpack.DefinePlugin({
+        'process.env.ff_addons': process.env.ff_addons,
+      }),
+    ]
+  };
 };

@@ -11,16 +11,18 @@
 #
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
+from firefly.ui.web.components.form import Form
+from firefly.ui.web.components.layouts.default import MenuItem, AppContainer, Crud
+from firefly.ui.web.js_libs.mithril import m
+from firefly.ui.web.plugins import add_menu_item, add_route
+from firefly.ui.web.polyfills import *  # __:skip
 
-from __future__ import annotations
+from iam.domain.entity.user import User
+from iam.domain.entity.client import Client
 
-import firefly as ff
+add_menu_item(m('div.ff-title', 'IAM'))
+add_menu_item(m(MenuItem('Users', icon='solid/users', route='/iam/users')))
+add_menu_item(m(MenuItem('Clients', icon='solid/mobile-alt', route='/iam/clients')))
 
-
-class Address(ff.ValueObject):
-    street_address: str = ff.required(str)
-    locality: str = ff.required(str)
-    region: str = ff.required(str)
-    postal_code: str = ff.required(str)
-    country: str = ff.required(str)
-    formatted: str = ff.optional(str)
+add_route('/iam/users', Crud('iam.User', User, '/iam/users'))
+add_route('/iam/clients', Crud('iam.Client', Client, '/iam/clients'))

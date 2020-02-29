@@ -14,37 +14,64 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, date
 
 import firefly as ff
 
-import iam
+from iam.domain.value_object.address import Address
+
+# __pragma__('skip')
+import bcrypt
+import uuid
+# __pragma__('noskip')
 
 
 class User(ff.AggregateRoot):
     # OpenID standard fields
-    sub: str = ff.id_()
-    name: str = ff.optional()
-    given_name: str = ff.optional()
-    family_name: str = ff.optional()
-    middle_name: str = ff.optional()
-    nickname: str = ff.optional()
-    preferred_username: str = ff.optional()
-    profile: str = ff.optional()
-    picture: str = ff.optional()
-    website: str = ff.optional()
-    email: str = ff.optional()
-    email_verified: bool = ff.optional(default=False)
-    gender: str = ff.optional()
-    birthdate: datetime = ff.optional()
-    zoneinfo: str = ff.optional()
-    locale: str = ff.optional()
-    phone_number: str = ff.optional()
-    phone_number_verified: bool = ff.optional(default=False)
-    address: iam.Address = ff.optional()
+    sub: str = ff.id_(validators=[ff.HasLength(36)])
+    name: str = ff.optional(str)
+    given_name: str = ff.optional(str)
+    family_name: str = ff.optional(str)
+    middle_name: str = ff.optional(str)
+    nickname: str = ff.optional(str)
+    preferred_username: str = ff.optional(str)
+    profile: str = ff.optional(str)
+    picture: str = ff.optional(str)
+    website: str = ff.optional(str)
+    email: str = ff.optional(str, validators=[ff.IsValidEmail()])
+    email_verified: bool = ff.optional(bool, default=False)
+    gender: str = ff.optional(str, validators=[ff.IsOneOf(('Male', 'Female'))])
+    birthdate: date = ff.optional(date)
+    zoneinfo: str = ff.optional(str)
+    locale: str = ff.optional(str)
+    phone_number: str = ff.optional(str)
+    phone_number_verified: bool = ff.optional(bool, default=False)
+    address: Address = ff.optional(Address)
     updated_at: datetime = ff.now()
 
     # Custom fields
     created_at: datetime = ff.now()
-    deleted_at: datetime = None
-    password_hash: str = ff.optional(length=32)
+    deleted_at: datetime = ff.optional(datetime)
+    password_hash: str = ff.optional(str, length=32)
+    salt: str = ff.hidden()
+
+    # __pragma__('skip')
+    @classmethod
+    def create(cls, **kwargs):
+        if 'email' in kwargs:
+            kwargs['email'] = str(kwargs['email']).lower()
+
+        try:
+            kwargs['salt'] = bcrypt.gensalt()
+            kwargs['password_hash'] = User._hash_password(kwargs['password'], kwargs['salt'])
+        except KeyError:
+            raise ff.MissingArgument('password is a required field for User::create()')
+        return cls(**ff.build_argument_list(kwargs, cls))
+
+    @classmethod
+    def _hash_password(cls, password: str, salt: str):
+        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+    def correct_password(self, password: str):
+        return self.password_hash == User._hash_password(password, self.salt)
+    # __pragma__('noskip')

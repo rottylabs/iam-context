@@ -15,8 +15,11 @@
 from __future__ import annotations
 
 import firefly_di as di
-import iam
+
+import iam.infrastructure as infra
+from iam.infrastructure.service.request_validator import IamRequestValidator
 
 
 class Container(di.Container):
-    pass
+    oauthlib_request_validator: infra.OauthlibRequestValidator = infra.OauthlibRequestValidator
+    request_validator: IamRequestValidator = IamRequestValidator

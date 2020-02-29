@@ -14,13 +14,20 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+from typing import List
+
 import firefly as ff
 
 
-class Address(ff.ValueObject):
-    street_address: str = ff.required(str)
-    locality: str = ff.required(str)
-    region: str = ff.required(str)
-    postal_code: str = ff.required(str)
-    country: str = ff.required(str)
-    formatted: str = ff.optional(str)
+class Grant(ff.AggregateRoot):
+    id: str = ff.id_()
+    client_id: str = ff.required(str)
+    user_id: str = ff.required(str)
+    code: str = ff.required(str)
+    redirect_uri: str = ff.required(str)
+    scopes: List[str] = ff.list_()
+    expires: datetime = ff.required(datetime)
+
+    def validate_redirect_uri(self, redirect_uri: str):
+        return self.redirect_uri == redirect_uri

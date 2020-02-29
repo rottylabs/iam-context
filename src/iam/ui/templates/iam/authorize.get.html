@@ -14,17 +14,24 @@
   ~ <http://www.gnu.org/licenses/>.
   -->
 
-<!doctype html>
-<html lang="text/html">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <meta name="apple-mobile-web-app-capable" content="yes"/>
-    <meta name="mobile-web-app-capable" content="yes"/>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authorization</title>
+</head>
+<body>
+    <h1>Sign In</h1>
+    <form method="post">
+        <input type="email" name="username" placeholder="Email"/>
+        <input type="password" name="password" placeholder="Password"/>
 
-    <title>Firefly - IAM</title>
-  </head>
-  <body>
-  </body>
+        <input type="hidden" name="client_id" value="{{ client_id }}"/>
+        <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}"/>
+        <input type="hidden" name="response_type" value="{{ response_type }}"/>
+        <input type="hidden" name="state" value="{{ state }}"/>
+
+        <input type="submit" value="Sign In"/>
+    </form>
+</body>
 </html>

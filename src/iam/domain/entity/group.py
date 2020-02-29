@@ -21,9 +21,10 @@ import firefly as ff
 
 class Group(ff.AggregateRoot):
     id: str = ff.id_()
-    name: str = ff.required()
+    name: str = ff.required(str)
 
     users: List[str] = ff.list_()
+    roles: List[str] = ff.list_()
 
     def assign_user_to_group(self, user_id: str):
         if user_id not in self.users:

@@ -11,16 +11,23 @@
 #
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
+import uuid
 
-from __future__ import annotations
-
-import firefly as ff
+from iam import User
 
 
-class Address(ff.ValueObject):
-    street_address: str = ff.required(str)
-    locality: str = ff.required(str)
-    region: str = ff.required(str)
-    postal_code: str = ff.required(str)
-    country: str = ff.required(str)
-    formatted: str = ff.optional(str)
+def test_create_user(system_bus, registry):
+    id_ = str(uuid.uuid1())
+    system_bus.invoke('iam.CreateUser', {
+        'sub': id_,
+        'password': 'abc123',
+    })
+    assert len(registry(User).find_all_matching(User.c.sub == id_)) == 1
+
+
+def test_authenticate_without_validation(system_bus):
+    system_bus.invoke('iam.CreateUser', {
+        'sub': str(uuid.uuid1()),
+        'username': 'user',
+        'password': ''
+    })

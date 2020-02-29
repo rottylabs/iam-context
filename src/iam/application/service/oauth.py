@@ -14,13 +14,30 @@
 
 from __future__ import annotations
 
+import json
+
 import firefly as ff
 
+from iam.domain.service import RequestValidator
 
-class Address(ff.ValueObject):
-    street_address: str = ff.required(str)
-    locality: str = ff.required(str)
-    region: str = ff.required(str)
-    postal_code: str = ff.required(str)
-    country: str = ff.required(str)
-    formatted: str = ff.optional(str)
+
+@ff.rest('/iam/authorize', method='POST')
+class AuthorizePassword(ff.ApplicationService):
+    _validator: RequestValidator = None
+
+    def __call__(self, username: str, password: str, _message: ff.Message, **kwargs):
+        pass
+
+
+@ff.rest('/iam/authorize', query_params={
+    'client_id': True,
+    'state': True,
+})
+class GetPreAuth(ff.ApplicationService):
+    _validator: RequestValidator = None
+
+    def __call__(self, _message: ff.Message, **kwargs):
+        scopes, credentials = self._validator.validate_pre_auth_request(_message)
+        del credentials['request']
+
+        return credentials

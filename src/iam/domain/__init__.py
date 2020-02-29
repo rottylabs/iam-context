@@ -13,4 +13,5 @@
 #  <http://www.gnu.org/licenses/>.
 
 from iam.domain.entity import *
+from iam.domain.error import *
 from iam.domain.value_object import *

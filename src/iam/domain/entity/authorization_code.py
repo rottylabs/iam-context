@@ -24,29 +24,23 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 
-from firefly.ui.web.components.layouts.default import AppContainer
-from firefly.ui.web.js_libs.mithril import m
-from firefly.ui.web.polyfills import *  # __:skip
+from __future__ import annotations
 
-from iam_web.components.clients_page import ClientsPage
-from iam_web.components.main_menu import MainMenu
+from datetime import datetime
+from typing import List
 
-m.route.prefix = ''
+import firefly as ff
 
-
-def app(component):
-    return AppContainer(component)
+from iam.domain.entity.user import User
+from iam.domain.entity.client import Client
 
 
-m.route(document.body, '/', {
-    '/': app(MainMenu()),
-    '/clients': app(ClientsPage()),
-})
-
-"""
-__pragma__('js', '{}', '''
-if (module.hot) {
-  module.hot.accept();
-}
-''')
-"""
+class AuthorizationCode(ff.Entity):
+    client: Client = ff.required()
+    user: User = ff.required()
+    scopes: List[str] = ff.required()
+    redirect_uri: str = ff.optional()
+    code: str = ff.required(str, length=36)
+    expires_at: datetime = ff.required()
+    challenge: str = ff.optional(str, length=128)
+    challenge_method: str = ff.optional(str, length=6)

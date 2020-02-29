@@ -24,29 +24,30 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 
-from firefly.ui.web.components.layouts.default import AppContainer
-from firefly.ui.web.js_libs.mithril import m
+from firefly.ui.web.components.firefly_logo import FireflyLogo, FireflyIcon
 from firefly.ui.web.polyfills import *  # __:skip
-
-from iam_web.components.clients_page import ClientsPage
-from iam_web.components.main_menu import MainMenu
-
-m.route.prefix = ''
+from firefly.ui.web.js_libs.mithril import m
 
 
-def app(component):
-    return AppContainer(component)
+class MainMenu:
+    PAGES = ('clients', 'users')
 
+    def __init__(self, exclude: List[str] = None):
+        self._exclude = exclude or []
 
-m.route(document.body, '/', {
-    '/': app(MainMenu()),
-    '/clients': app(ClientsPage()),
-})
+    def _menu_item(self, page: str):
+        if page in self._exclude:
+            return None
 
-"""
-__pragma__('js', '{}', '''
-if (module.hot) {
-  module.hot.accept();
-}
-''')
-"""
+        return m(
+            'div.pl-3.py-1',
+            m(m.route.Link, {'href': f'/{page}'}, page)
+        )
+
+    def view(self):
+        return m(
+            'div.flex.flex-col.justify-start', [
+                m(FireflyLogo()),
+                list(map(self._menu_item, self.PAGES))
+            ]
+        )

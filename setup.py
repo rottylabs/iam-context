@@ -27,6 +27,9 @@ setuptools.setup(
     url="https://github.com/rottylabs/iam-context",
     packages=setuptools.PEP420PackageFinder.find('src'),
     package_dir={'': 'src'},
+    install_requires=[
+        'oauthlib==3.1.0',
+    ],
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",

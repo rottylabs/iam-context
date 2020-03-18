@@ -24,23 +24,63 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 
-from firefly.ui.web.components.layouts.default import AppContainer
+from firefly.ui.web.components.layouts.default import app_container, compose, default_layout
 from firefly.ui.web.js_libs.mithril import m
 from firefly.ui.web.polyfills import *  # __:skip
 
-from iam_web.components.clients_page import ClientsPage
-from iam_web.components.main_menu import MainMenu
+# from iam_web.components.clients_page import ClientsPage
+# from iam_web.components.main_menu import MainMenu
 
 m.route.prefix = ''
 
 
 def app(component):
-    return AppContainer(component)
+    return {
+        'view': lambda: m(app_container, {'content': component})
+    }
+
+
+def counter():
+    count = 0
+
+    def increment():
+        nonlocal count
+        count += 1
+        console.log(count)
+
+    def decrement():
+        nonlocal count
+        count -= 1
+
+    return {
+        'view': lambda vnode: m('div', [
+            m('p', f'count: {count}'),
+            m('button', {'onclick': increment}, 'Increment'),
+            m('button', {'onclick': decrement}, 'Decrement'),
+        ])
+    }
+
+
+def main_content():
+    return {
+        'view': lambda: m('div.flex.flex-col', [
+            m(counter),
+            m(counter),
+        ])
+    }
+
+
+def custom_header():
+    return {
+        'view': lambda: m('div', 'bleck')
+    }
 
 
 m.route(document.body, '/', {
-    '/': app(MainMenu()),
-    '/clients': app(ClientsPage()),
+    # '/': app(MainMenu()),
+    # '/': app(main_content),
+    '/': compose(default_layout, main_content),
+    # '/clients': app(ClientsPage()),
 })
 
 """
@@ -50,3 +90,4 @@ if (module.hot) {
 }
 ''')
 """
+

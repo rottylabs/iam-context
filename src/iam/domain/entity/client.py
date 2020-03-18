@@ -30,15 +30,32 @@ from typing import List
 
 import firefly as ff
 
+authorization_code = 'Authorization Code'
+implicit = 'Implicit'
+resource_owner_password_credentials = 'Resource Owner Password Credentials'
+client_credentials = 'Client Credentials'
+
+
+def response_type_choices(client_dto: dict):
+    if client_dto['grant_type'] == authorization_code:
+        return 'code token', 'code id_token', 'code token id_token'
+    if client_dto['grant_type'] == implicit:
+        return 'id_token token', 'id_token'
+
+    return ()
+
 
 class Client(ff.AggregateRoot):
     id: str = ff.id_()
-    grant_type: str = ff.required(str, validators=[ff.IsOneOf(('authorization_code', 'Authorization code'))])
-    response_type: str = ff.required(str, validators=[ff.IsOneOf(('code', 'Authorization code'))])
+    name: str = ff.required(str)
+    grant_type: str = ff.required(str, validators=[ff.IsOneOf((
+        authorization_code, implicit, resource_owner_password_credentials, client_credentials
+    ))])
+    response_type: str = ff.optional(str, validators=[ff.IsOneOf(response_type_choices)])
     scopes: str = ff.required(str)
     default_redirect_uri: str = ff.required(str)
     redirect_uris: List[str] = ff.list_()
-    allowed_response_types: List[str] = ff.list_(validators=[ff.IsOneOf('code', 'token')])
+    allowed_response_types: List[str] = ff.list_(validators=[ff.IsOneOf(('code', 'token'))])
 
     def validate_redirect_uri(self, redirect_uri: str):
         return redirect_uri in self.redirect_uris

@@ -24,7 +24,7 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 
-from firefly.ui.web.components.layouts.default import app_container, compose, default_layout
+from firefly.ui.web.components.layouts.default import compose, default_layout
 from firefly.ui.web.js_libs.mithril import m
 from firefly.ui.web.polyfills import *  # __:skip
 
@@ -32,12 +32,6 @@ from firefly.ui.web.polyfills import *  # __:skip
 # from iam_web.components.main_menu import MainMenu
 
 m.route.prefix = ''
-
-
-def app(component):
-    return {
-        'view': lambda: m(app_container, {'content': component})
-    }
 
 
 def counter():
@@ -77,10 +71,7 @@ def custom_header():
 
 
 m.route(document.body, '/', {
-    # '/': app(MainMenu()),
-    # '/': app(main_content),
     '/': compose(default_layout, main_content),
-    # '/clients': app(ClientsPage()),
 })
 
 """

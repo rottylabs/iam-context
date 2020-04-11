@@ -12,7 +12,7 @@
 #  You should have received a copy of the GNU General Public License along with Firefly. If not, see
 #  <http://www.gnu.org/licenses/>.
 from firefly.ui.web.components.form import Form
-from firefly.ui.web.components.layouts.default import Crud, menu_item
+from firefly.ui.web.components.layouts.default import Crud, menu_item, crud
 from firefly.ui.web.js_libs.mithril import m
 from firefly.ui.web.plugins import add_menu_item, add_route
 from firefly.ui.web.polyfills import *  # __:skip
@@ -23,6 +23,19 @@ from iam.domain.entity.client import Client
 add_menu_item(m('div.ff-title', 'IAM'))
 add_menu_item(m(menu_item('Users', icon='solid/users', route='/iam/users')))
 add_menu_item(m(menu_item('Clients', icon='solid/mobile-alt', route='/iam/clients')))
+
+crud('iam.User', User, '/iam/users')
+crud('iam.Client', Client, '/iam/clients', {
+    'fields': [
+        'name',
+        'grant_type',
+        'response_type',
+        'scopes',
+        'default_redirect_uri',
+        'redirect_uris',
+        'allowed_response_types',
+    ]
+})
 
 # add_route('/iam/users', Crud('iam.User', User, '/iam/users'))
 # add_route('/iam/clients', Crud('iam.Client', Client, '/iam/clients', {
